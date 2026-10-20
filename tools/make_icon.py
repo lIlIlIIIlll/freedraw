@@ -1,6 +1,6 @@
 """Gera o icone arco-iris do Freedraw a partir do traco preto original.
 
-uso: python tools/make_icon.py draw-icon-117078-512.png src/Freedraw.App/Assets
+uso: python tools/make_icon.py tools/icon-source.png src/Freedraw.App/Assets
 
 Saidas: freedraw.ico (16..64 em BMP, 256 em PNG -- o formato que o Windows le
 em todo lugar), freedraw.png (512) e preview_sizes.png (conferencia visual).
