@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Freedraw.App/Freedraw.App.csproj" />
+    <Project Path="src/Freedraw.Ink/Freedraw.Ink.csproj" />
+    <Project Path="src/Freedraw.Input/Freedraw.Input.csproj" />
+    <Project Path="src/Freedraw.Probe/Freedraw.Probe.csproj" />
+  </Folder>
+</Solution>

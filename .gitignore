@@ -1,0 +1,13 @@
+# build
+bin/
+obj/
+publish/
+
+# IDE
+.vs/
+.vscode/
+*.user
+
+# python (spike/, tools/)
+__pycache__/
+*.pyc

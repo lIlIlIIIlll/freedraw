@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- WinExe: sem console. O app vive na bandeja; diagnostico sai pelo
+         Freedraw.Probe e erros fatais por MessageBox. -->
+    <OutputType>WinExe</OutputType>
+    <UseWindowsForms>true</UseWindowsForms>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Freedraw.exe, nao Freedraw.App.exe: e o nome que o usuario ve. -->
+    <AssemblyName>Freedraw</AssemblyName>
+    <!-- Icone do .exe (Explorer, Alt+Tab, Gerenciador de Tarefas). -->
+    <ApplicationIcon>Assets\freedraw.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Embutido, nao copiado ao lado: o app continua sendo um .exe so. -->
+    <EmbeddedResource Include="Assets\freedraw.ico" LogicalName="Freedraw.App.freedraw.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" Version="3.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Freedraw.Input\Freedraw.Input.csproj" />
+    <ProjectReference Include="..\Freedraw.Ink\Freedraw.Ink.csproj" />
+  </ItemGroup>
+
+</Project>
