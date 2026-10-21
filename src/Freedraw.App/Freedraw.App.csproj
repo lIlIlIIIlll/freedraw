@@ -14,7 +14,16 @@
     <AssemblyName>Freedraw</AssemblyName>
     <!-- Icone do .exe (Explorer, Alt+Tab, Gerenciador de Tarefas). -->
     <ApplicationIcon>Assets\freedraw.ico</ApplicationIcon>
+    <!-- O workflow de release sobrescreve com a tag (v1.2.0 -> -p:Version=1.2.0).
+         Build local fica em 0.0.0, que nunca se confunde com uma release. -->
+    <Version>0.0.0</Version>
   </PropertyGroup>
+
+  <!-- Auto-update so no exe do workflow (-p:AutoUpdate=true). Em build local o
+       updater desliga: senao baixaria a release por cima do exe de desenvolvimento. -->
+  <ItemGroup Condition="'$(AutoUpdate)' == 'true'">
+    <AssemblyMetadata Include="Freedraw.AutoUpdate" Value="true" />
+  </ItemGroup>
 
   <ItemGroup>
     <!-- Embutido, nao copiado ao lado: o app continua sendo um .exe so. -->

@@ -20,6 +20,10 @@ internal static class Program
     private const long PenIdleMs = 500;       // watchdog de perda da caneta
     private const float TakeoverSlack = 0.01f; // 1% da mesa: movimento que retoma do mouse
 
+    /// <summary>Pedido pelo item "Reiniciar para atualizar": o Main sobe o exe
+    /// novo DEPOIS de soltar o mutex, senao a nova instancia se acharia duplicada.</summary>
+    private static bool _restartForUpdate;
+
     [STAThread]
     private static int Main()
     {
@@ -37,10 +41,12 @@ internal static class Program
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
         SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+        Updater.CleanupPreviousUpdate();
 
+        int code;
         try
         {
-            return Run();
+            code = Run();
         }
         catch (Exception ex)
         {
@@ -48,6 +54,14 @@ internal static class Program
                             MessageBoxButtons.OK, MessageBoxIcon.Error);
             return 1;
         }
+
+        if (_restartForUpdate && Environment.ProcessPath is { } exe)
+        {
+            single.ReleaseMutex();
+            single.Dispose();
+            System.Diagnostics.Process.Start(exe);
+        }
+        return code;
     }
 
     private static int Run()
@@ -232,6 +246,11 @@ internal static class Program
         tray.UndoRequested += Undo;
         tray.ToggleRequested += () => SetEnabled(!drawingEnabled);
         tray.QuitRequested += Quit;
+        tray.RestartRequested += () => { _restartForUpdate = true; Quit(); };
+
+        using var updater = new Updater();
+        updater.Start();
+        bool updateAnnounced = false;
 
         overlay.HotkeyPressed += id =>
         {
@@ -410,6 +429,12 @@ internal static class Program
                 && (Volatile.Read(ref mouseHasControlFlag) != 0
                     || (!PenInRange() && Environment.TickCount64 - lastPenActivity > MenuGraceMs)))
                 menu.Close();
+
+            if (!updateAnnounced && updater.Installed is { } installed)
+            {
+                updateAnnounced = true;
+                tray.ShowUpdateReady(installed);
+            }
 
             if (colorsDirty && !menu.IsDragging)
             {

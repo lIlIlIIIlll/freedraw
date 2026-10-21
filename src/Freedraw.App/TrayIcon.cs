@@ -15,12 +15,14 @@ public sealed class TrayIcon : IDisposable
 {
     private readonly NotifyIcon _icon;
     private readonly ToolStripMenuItem _toggleItem;
+    private readonly ToolStripMenuItem _restartItem;
     private readonly Icon _appIcon;
 
     public event Action? ClearRequested;
     public event Action? UndoRequested;
     public event Action? ToggleRequested;
     public event Action? QuitRequested;
+    public event Action? RestartRequested;
 
     public TrayIcon()
     {
@@ -33,7 +35,16 @@ public sealed class TrayIcon : IDisposable
         };
         _toggleItem.Click += (_, _) => ToggleRequested?.Invoke();
 
+        // Escondido ate o updater trocar o exe: so entao reiniciar faz sentido.
+        _restartItem = new ToolStripMenuItem { Visible = false };
+        _restartItem.Click += (_, _) => RestartRequested?.Invoke();
+
         var menu = new ContextMenuStrip();
+        // Rotulo de versao no topo: e a primeira coisa a perguntar quando
+        // "nao atualizou no meu PC".
+        menu.Items.Add(new ToolStripMenuItem(VersionLabel()) { Enabled = false });
+        menu.Items.Add(_restartItem);
+        menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(_toggleItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Desfazer (Ctrl+Alt+Z)", null, (_, _) => UndoRequested?.Invoke());
@@ -58,6 +69,22 @@ public sealed class TrayIcon : IDisposable
             : "Desenho DESATIVADO (Ctrl+Alt+D)";
         _toggleItem.Checked = enabled;
     }
+
+    /// <summary>Avisa uma vez que a versao nova ja esta no disco.</summary>
+    public void ShowUpdateReady(Version version)
+    {
+        string v = version.ToString(3);
+        _restartItem.Text = $"Reiniciar para atualizar (v{v})";
+        _restartItem.Visible = true;
+        _icon.ShowBalloonTip(5000, "Freedraw atualizado",
+            $"A v{v} foi baixada e entra na proxima vez que o Freedraw abrir. "
+            + "Para usar agora: menu da bandeja > Reiniciar para atualizar.",
+            ToolTipIcon.Info);
+    }
+
+    private static string VersionLabel() =>
+        $"Freedraw v{Updater.CurrentVersion.ToString(3)}"
+        + (Updater.Enabled ? "" : " (build local, sem auto-update)");
 
     /// <summary>Tooltip da bandeja: limite de 63 chars, o Windows trunca alem disso.</summary>
     public void SetStatus(string status)

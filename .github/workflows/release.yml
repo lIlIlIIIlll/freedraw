@@ -1,0 +1,47 @@
+# Publica uma release quando uma tag vX.Y.Z e enviada:
+#   git tag v1.1.0
+#   git push origin v1.1.0
+#
+# Compila o Freedraw.exe (perfil Portable, com auto-update ligado e a versao da
+# tag), gera o Freedraw.exe.sha256 que o updater confere antes de instalar, e
+# anexa os dois na release. Os apps instalados pegam a versao nova sozinhos.
+name: release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write   # criar a release e anexar arquivos
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Versao a partir da tag
+        id: version
+        shell: pwsh
+        run: |
+          $version = '${{ github.ref_name }}'.TrimStart('v')
+          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw "tag '${{ github.ref_name }}' nao e vX.Y.Z" }
+          "value=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Publicar Freedraw.exe
+        run: dotnet publish src/Freedraw.App -p:PublishProfile=Portable -p:Version=${{ steps.version.outputs.value }} -p:AutoUpdate=true
+
+      - name: Hash SHA-256
+        shell: pwsh
+        run: |
+          $hash = (Get-FileHash publish/Freedraw.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          Set-Content publish/Freedraw.exe.sha256 "$hash  Freedraw.exe" -NoNewline -Encoding ascii
+
+      - name: Criar release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create ${{ github.ref_name }} publish/Freedraw.exe publish/Freedraw.exe.sha256 --title ${{ github.ref_name }} --generate-notes --latest
